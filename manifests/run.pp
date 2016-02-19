@@ -256,7 +256,6 @@ define docker::run(
       }
     }
 
-
     if $ensure == 'absent' {
         service { "${service_prefix}${sanitised_title}":
           ensure    => false,
@@ -315,12 +314,29 @@ define docker::run(
             $provider = undef
           }
 
+          case $::operatingsystem {
+            'FreeBSD' : {
+              file { "/etc/rc.conf.d/${service_prefix}${sanitised_title}" :
+                ensure  => present,
+                content => template('docker/etc/rc.conf.d/docker-sub.erb'),
+                mode    => 0644,
+              }
+
+              $_require = [ File["/etc/rc.conf.d/${service_prefix}${sanitised_title}"], File[$initscript] ]
+
+            }
+            default : {
+              $_require = File[$initscript]
+
+            }
+          }
+
           service { "${service_prefix}${sanitised_title}":
             ensure    => $running,
             enable    => true,
             provider  => $provider,
             hasstatus => $hasstatus,
-            require   => File[$initscript],
+            require   => $_require,
           }
         }
 

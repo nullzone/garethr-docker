@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Pulls a docker image.
 # Returns 0 if there a change.
@@ -7,9 +7,9 @@
 #
 DOCKER_IMAGE=$1
 
-BEFORE=$(docker inspect --format='{{.Config.Image}}' ${DOCKER_IMAGE} 2>/dev/null)
+BEFORE=$(docker inspect --format='{{.Id}}' ${DOCKER_IMAGE} 2>/dev/null)
 <%= @docker_command -%> pull ${DOCKER_IMAGE}
-AFTER=$(docker inspect --format='{{.Config.Image}}' ${DOCKER_IMAGE} 2>/dev/null)
+AFTER=$(docker inspect --format='{{.Id}}' ${DOCKER_IMAGE} 2>/dev/null)
 
 if [[ -z $AFTER ]]; then
   echo "Docker image ${DOCKER_IMAGE} failed to pull!"
@@ -17,6 +17,9 @@ if [[ -z $AFTER ]]; then
 elif [[ $BEFORE == $AFTER ]]; then
   echo "No updates to ${DOCKER_IMAGE} available. Currently on ${AFTER}."
   exit 1
+elif [[ -z $BEFORE && ! -z $AFTER ]]; then
+  echo "${DOCKER_IMAGE} downloaded. Id: ${AFTER}."
+  exit 0
 else
   echo "${DOCKER_IMAGE} updated. Changed from ${BEFORE} to ${AFTER}."
   exit 0

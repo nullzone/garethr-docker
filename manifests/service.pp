@@ -101,8 +101,8 @@ class docker::service (
   $service_hasrestart                = $docker::service_hasrestart,
 ) {
 
-  unless $::osfamily =~ /(Debian|RedHat|Archlinux)/ {
-    fail('The docker::service class needs a Debian, RedHat or Archlinux based system.')
+  unless $::osfamily =~ /(Debian|RedHat|Archlinux|FreeBSD)/ {
+    fail('The docker::service class needs a Debian, RedHat, Archlinux or FreeBSD based system.')
   }
 
   $dns_array = any2array($dns)
