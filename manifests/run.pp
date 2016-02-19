@@ -263,6 +263,10 @@ define docker::run(
           hasstatus => $hasstatus,
         }
 
+        file { "/etc/rc.conf.d/${service_prefix}${sanitised_title}" :
+          ensure  => absent,
+        }
+
         exec {
           "remove container ${service_prefix}${sanitised_title}":
             command     => "${docker_command} rm -v ${sanitised_title}",

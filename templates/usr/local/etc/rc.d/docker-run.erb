@@ -15,6 +15,8 @@
 name="<%= @service_prefix %><%= @sanitised_title %>"
 rcvar="<%= @service_prefix %><%= @sanitised_title %>_enable"
 
+docker=/usr/local/bin/docker
+
 stop_cmd="docker_stop"
 start_cmd="docker_start"
 clean_cmd="docker_clean"
@@ -27,7 +29,7 @@ command="/usr/local/bin/docker"
 
 load_rc_config $name
 
-: ${docker_enable=NO}
+: ${<%= @service_prefix %><%= @sanitised_title %>_enable=NO}
 
 docker_start()
 {
@@ -45,7 +47,7 @@ docker_start()
 
     [ -x $docker ] || exit 5
 
-    if [ "true" = "$($docker inspect --format='{{.State.Running}}' <%= @sanitised_title %>)" ]; then
+    if [ "true" = "$($docker inspect --format='{{.State.Running}}' <%= @sanitised_title %> 2>/dev/null)" ]; then
        echo "Container <%= @sanitised_title %> is still running."
        exit 7
     fi
