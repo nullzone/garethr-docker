@@ -59,7 +59,7 @@ define docker::registry(
     command     => $auth_cmd,
     user        => $local_user,
     cwd         => '/root',
-    path        => ['/bin', '/usr/bin'],
+    path        => ['/bin', '/usr/bin', '/usr/local/bin'],
     timeout     => 0,
   }
 

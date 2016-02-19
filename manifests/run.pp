@@ -201,7 +201,7 @@ define docker::run(
       command     => "${docker_command} run -d ${docker_run_flags} --name ${sanitised_title} --cidfile=${cidfile} --restart=\"${restart}\" ${image} ${command}",
       unless      => "${docker_command} ps --no-trunc -a | grep `cat ${cidfile}`",
       environment => 'HOME=/root',
-      path        => ['/bin', '/usr/bin'],
+      path        => ['/bin', '/usr/bin', '/usr/local/bin', '/usr/local/sbin'],
       timeout     => 0
     }
   } else {
@@ -243,6 +243,13 @@ define docker::run(
         $hasstatus      = true
         $mode           = '0644'
         $uses_systemd   = true
+      }
+      'FreeBSD': {
+        $initscript     = "/usr/local/etc/rc.d/${service_prefix}${sanitised_title}"
+        $init_template  = 'docker/usr/local/etc/rc.d/docker-run.erb'
+        $hasstatus      = undef
+        $mode           = '0755'
+        $uses_systemd   = false
       }
       default: {
         fail('Docker needs a Debian, RedHat or Archlinux based system.')

@@ -44,7 +44,7 @@ define docker::exec(
 
   exec { $exec:
     environment => 'HOME=/root',
-    path        => ['/bin', '/usr/bin'],
+    path        => ['/bin', '/usr/bin', '/usr/local/bin'],
     timeout     => 0,
     unless      => $unless_command,
   }

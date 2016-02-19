@@ -231,6 +231,26 @@ class docker::params {
       $service_config = '/etc/conf.d/docker'
       $service_config_template = 'docker/etc/conf.d/docker.erb'
     }
+    'FreeBSD' : {
+      $manage_epel = false
+      $docker_group = $docker_group_default
+      $package_key_source = undef
+      $package_source_location = undef
+      $package_key = undef
+      $package_repos = undef
+      $package_release = undef
+      $use_upstream_package_source = false
+      $package_name = 'docker-freebsd'
+      $service_name = $service_name_default
+      $docker_command = $docker_command_default
+      $detach_service_in_init = false
+      $repo_opt = undef
+      $nowarn_kernel = true
+      $service_provider   = 'freebsd'
+      $service_hasstatus  = false
+      $service_hasrestart = false
+      $service_config = undef
+    }
     default: {
       $manage_epel = false
       $docker_group = $docker_group_default
@@ -261,6 +281,7 @@ class docker::params {
       default  => [],
     },
     'RedHat' => ['device-mapper'],
+    'FreeBSD' => ['ca_root_nss'],
     default  => [],
   }
 
