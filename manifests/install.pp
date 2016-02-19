@@ -7,7 +7,7 @@
 class docker::install {
   $docker_command = $docker::docker_command
   validate_string($docker::version)
-  validate_re($::osfamily, '^(Debian|RedHat|Archlinux)$', 'This module only works on Debian, Red Hat and Archlinux based systems.')
+  validate_re($::osfamily, '^(Debian|RedHat|Archlinux|FreeBSD)$', 'This module only works on Debian, Red Hat, Archlinux and FreeBSD based systems.')
   validate_string($::kernelrelease)
   validate_bool($docker::use_upstream_package_source)
 
@@ -54,6 +54,12 @@ class docker::install {
         notify { 'docker::version unsupported on Archlinux':
           message => 'Versions other than latest are not supported on Arch Linux. This setting will be ignored.'
         }
+      }
+    }
+    'FreeBSD': {
+      $manage_kernel = false
+      if versioncmp($::operatingsystemrelease, '10.2') < 0 {
+        fail('Docker needs FreeBSD version to be at least 10.2.')
       }
     }
   }

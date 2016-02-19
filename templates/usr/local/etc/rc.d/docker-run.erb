@@ -1,0 +1,147 @@
+<%-
+        @required_start = ["netif", "DAEMON" , "docker"] +
+                @sanitised_after_array.map{ |s| "#{@service_prefix}#{s}"} +
+                @sanitised_depends_array.map{ |s| "#{@service_prefix}#{s}"} +
+                @depend_services_array
+-%>
+#!/bin/sh
+
+# PROVIDE: <%= @service_prefix %><%= @sanitised_title %>
+# REQUIRE: <%= @required_start.uniq.join(" ") %>
+# KEYWORD: nojail shutdown
+
+. /etc/rc.subr
+
+name="<%= @service_prefix %><%= @sanitised_title %>"
+rcvar="<%= @service_prefix %><%= @sanitised_title %>_enable"
+
+stop_cmd="docker_stop"
+start_cmd="docker_start"
+clean_cmd="docker_clean"
+status_cmd="docker_status"
+reload_cmd="docker_reload"
+cleanRestart_cmd="docker_cleanRestart"
+restart_cmd="docker_restart"
+
+command="/usr/local/bin/docker"
+
+load_rc_config $name
+
+: ${docker_enable=NO}
+
+docker_start()
+{
+
+    if [ -e "/var/run/docker.pid" ] ; then
+            pgrep -F /var/run/docker.pid 2>/dev/null >/dev/null
+            if [ $? -ne 0 ] ; then
+                    echo "Is Docker running? /var/run/docker.pid"
+                    exit 1
+            fi
+    else
+            echo "Docker pid file missing. Is Docker running?"
+            exit 1
+    fi
+
+    [ -x $docker ] || exit 5
+
+    if [ "true" = "$($docker inspect --format='{{.State.Running}}' <%= @sanitised_title %>)" ]; then
+       echo "Container <%= @sanitised_title %> is still running."
+       exit 7
+    fi
+
+    echo -n "Starting container <%= @sanitised_title %> - service ${name}: "
+
+    <% if @before_start -%>
+        <%= @before_start %>
+    <% end -%>
+    <% if @remove_container_on_stop -%>
+        $docker rm <% if @remove_volume_on_start %>-v<% end %> <%= @sanitised_title %> >/dev/null 2>&1
+    <% end -%>
+    <% if @pull_on_start -%>
+        $docker pull <%= @image %>
+    <% end -%>
+    $docker run \
+    <%= @docker_run_flags %> \
+    --name <%= @sanitised_title %> \
+    <%= @image %> \
+    <% if @command %> <%= @command %><% end %>
+    retval=$?
+
+    if [ $retval -eq 0 ]; then
+        echo "done."
+    else
+        echo "failed."
+        exit 1
+    fi
+
+}
+
+docker_stop()
+{
+    echo -n "Stopping container <%= @sanitised_title %> - service ${name}: "
+    <% if @before_stop -%>
+        <%= @before_stop %>
+    <% end -%>
+    $docker stop <%= @sanitised_title %>
+    retval=$?
+    <% if @remove_container_on_stop -%>
+        $docker rm <% if @remove_volume_on_stop %>-v<% end %> <%= @sanitised_title %>
+    <% end -%>
+    retval=$?
+
+    if [ $retval -eq 0 ]; then
+        echo "done."
+    else
+        echo "failed."
+        exit 1
+    fi
+    return $retval
+}
+
+docker_status()
+{
+    if [ "true" = "$($docker inspect --format='{{.State.Running}}' <%= @sanitised_title %>)" ]; then
+        echo $name is running
+        exit 0
+    else
+        echo $name not running
+        exit 1
+    fi
+}
+
+docker_clean()
+{
+    if ! [ -f $cidfile ]; then
+        failure
+        echo
+        printf "$cidfile does not exist.\n"
+    else
+        cid="$(cat $cidfile)"
+        rm $cidfile
+        $docker rm -v -f $cid
+        retval=$?
+        return $retval
+    fi
+}
+
+docker_restart()
+{
+    docker_stop
+    docker_start
+}
+
+docker_reload()
+{
+    docker_restart
+}
+
+docker_cleanRestart()
+{
+    docker_stop
+    docker_clean
+    docker_start
+}
+
+
+run_rc_command "$1"

@@ -252,7 +252,7 @@ define docker::run(
         $uses_systemd   = false
       }
       default: {
-        fail('Docker needs a Debian, RedHat or Archlinux based system.')
+        fail('Docker needs a Debian, RedHat, Archlinux or FreeBSD based system.')
       }
     }
 
